@@ -9,8 +9,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardMarkup, InlineKeyboardButton
 
 TOKEN = "8111567992:AAFVVOT55iGvIBS6BQNKtoz25NAZPJOaMIw"
-TON_WALLET = "UQB-dqoWUd7ea5c_N3sAvfOUA6-WnjpGIM2fmpaM9ZoQ2bDh"
-CARD_NUMBER = "9860 1606 2312 1748"
+TON_WALLET = "UQB-dqoWUd7ea5c_N3sAvfOUA6-WnjpGIM2fmpaM9ZoQ2bDh" 
+CARD_NUMBER = "9860 1606 2312 1748" 
 ADMIN_ID = 7664675013  # Admin Telegram ID
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -50,8 +50,8 @@ def generate_star_keyboard(page=1) -> InlineKeyboardMarkup:
     end = start + per_page
 
     for amount in amounts[start:end]:
-        ton = round((amount / 50) * 0.3, 2)
-        sum_so_m = int((amount / 50) * 12000)
+        ton = round((amount / 50) * 0.34, 2)
+        sum_so_m = int((amount / 50) * 13000)
         builder.button(
             text=f"{amount}⭐ - {ton}TON / {sum_so_m:,} so‘m",
             callback_data=f"order_{amount}"
@@ -83,7 +83,7 @@ def admin_order_keyboard(order_id: int) -> InlineKeyboardMarkup:
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
-        "⭐ Kerakli yulduz miqdorini tanlang:",
+        "⭐ Kerakli stars miqdorini tanlang:",
         reply_markup=generate_star_keyboard(1)
     )
 
@@ -98,16 +98,21 @@ async def pagination(callback: types.CallbackQuery):
 @dp.callback_query(F.data.startswith("order_"))
 async def stars_selected(callback: types.CallbackQuery):
     amount = int(callback.data.split("_")[1])
-    ton_amount = round((amount / 50) * 0.3, 2)
-    sum_so_m = int((amount / 50) * 12000)
+    ton_amount = round((amount / 50) * 0.34, 2)
+    sum_so_m = int((amount / 50) * 13000)
 
     await callback.message.answer(
         f"✅ Siz <b>{amount}⭐</b> tanladingiz.\n"
+
         f"💰 Narx: <b>{ton_amount} TON</b> yoki <b>{sum_so_m:,} so‘m</b>\n\n"
-        f"💳 To‘lov uchun:\n"
-        f"📌 TON Wallet: <code>{TON_WALLET}</code>\n"
+
+        f"💳 To‘lov uchun:\n\n"
+
+        f"📌 TON Wallet: <code>{TON_WALLET}</code>\n\n"
+
         f"📌 UzCard/Humo: <code>{CARD_NUMBER}</code>\n\n"
-        f"✅ To‘lovni amalga oshirgach, chekni shu yerga yuboring!"
+
+        f"✅ To‘lovni amalga oshirgach, chekni shu yerga yuboring chek soxta bo'lmasa stars yuboriladi!"
     )
 
     async with aiosqlite.connect("orders.db") as db:
@@ -141,7 +146,7 @@ async def handle_receipt(message: types.Message, state: FSMContext):
             await db.commit()
 
         await state.update_data(order_id=order_id, amount=amount)
-        await message.answer("📌 Qaysi user uchun yuboriladi? Username yoki ID kiriting:")
+        await message.answer("📌 Stars qaysi user uchun yuburiladi iltimos yozib qoldiring @:")
         await state.set_state(OrderFSM.waiting_for_target_user)
     else:
         await message.reply(
@@ -170,12 +175,12 @@ async def handle_target_user(message: types.Message, state: FSMContext):
     file_id, file_type = row
 
     caption = (
-        f"📥 Yangi buyurtma!\n"
+        f"📥 stars tasha o'!\n"
         f"👤 Buyurtmachi: <code>{message.from_user.id}</code>\n"
-        f"🆔 Order ID: <b>{order_id}</b>\n"
-        f"⭐ Yulduz: <b>{amount}</b>\n"
-        f"🎯 Target user: <b>{target_user}</b>\n"
-        f"✅ Status: pending"
+        f"🆔 Telegram ID: <b>{order_id}</b>\n"
+        f"⭐ Miqdori: <b>{amount}</b>\n"
+        f"🎯 Stars qabul qiluvchi: <b>{target_user}</b>\n"
+        f"✅ Status: odam"
     )
 
     markup = admin_order_keyboard(order_id)
@@ -210,7 +215,7 @@ async def approve_callback(callback: types.CallbackQuery):
         user_id = row[0]
         await bot.send_message(
             user_id,
-            "✅ <b>Yulduzlaringiz yetkazib berildi!</b>\nRahmat!"
+            "✅ <b>Yulduzlaringiz yetkazib berildi iltimos tekshiring!</b>\nRahmat!"
         )
 
         await callback.message.edit_caption(
@@ -240,7 +245,7 @@ async def reject_callback(callback: types.CallbackQuery):
         user_id = row[0]
         await bot.send_message(
             user_id,
-            "🚫 <b>Chekingiz tasdiqlanmadi.</b>\nChekingiz soxta bo‘lishi mumkin. Iltimos, tekshirib qayta urinib ko‘ring."
+            "🚫 <b>Chekingiz tasdiqlanmadi.</b>\nChekingiz soxta bo‘lishi mumkin. Iltimos, tekshirib qayta urinib ko‘ring. Agar xatolik bo'lsa @ikromjonovv_15"
         )
 
         await callback.message.edit_caption(
