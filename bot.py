@@ -49,7 +49,7 @@ def main_menu() -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     kb.button(text="⭐ Yulduz sotib olish", callback_data="buy_stars")
     kb.button(text="🎁 Gift sotib olish", callback_data="buy_gift")
-    kb.button(text="🪖 Battle uchun", callback_data="buy_battle")
+    kb.button(text="🪖 Battle uchun stars", callback_data="buy_battle")
     kb.adjust(1)
     return kb.as_markup()
 
@@ -57,7 +57,7 @@ def main_menu() -> InlineKeyboardMarkup:
 def stars_keyboard(order_type: str, page: int = 1) -> InlineKeyboardMarkup:
     amounts = {
         "stars": list(range(50, 5001, 50)),
-        "battle": list(range(5, 101, 2)),
+        "battle": list(range(5, 50, 1)),
     }[order_type]
     price_per_star = 13000 / 50 if order_type == "stars" else 240
 
@@ -212,13 +212,13 @@ async def receive_receipt(message: types.Message, state: FSMContext):
         await message.answer("🔗 Battle linkini yuboring.")
     else:
         await state.set_state(OrderFSM.waiting_for_target_user)
-        await message.answer("🎯 Target userni yuboring yani qaysi user uchun yuboriladi @.")
+        await message.answer("stars qaysi user uchunligini yuboring @.")
 
 
 @dp.message(OrderFSM.waiting_for_target_user)
 async def target_user(message: types.Message, state: FSMContext):
     await send_to_admin(message, state, "🎯 Target")
-    await message.answer("✅ Ma’lumotlar yuborildi iltimos sabr qling.")
+    await message.answer("✅ Ma’lumotlar yuborildi iltimos sabr qling agar 6 soat ichida yuborilmasa @ikromjonovv_15 yozishinggiz mumkin.")
     await state.clear()
 
 
@@ -254,12 +254,12 @@ async def send_to_admin(message: types.Message, state: FSMContext, label: str):
 
 @dp.callback_query(F.data.regexp(r"approve_\d+"))
 async def approve(callback: types.CallbackQuery):
-    await update_order(callback, "approved", "✅ Buyurtmangiz tasdiqlandi stars muvaffaqiyat yetkzildi tekshiring .")
+    await update_order(callback, "approved", "✅ Buyurtmangiz tasdiqlandi stars muvaffaqiyat yetkzildi tekshiring😊 .")
 
 
 @dp.callback_query(F.data.regexp(r"reject_\d+"))
 async def reject(callback: types.CallbackQuery):
-    await update_order(callback, "rejected", "🚫 Buyurtmangiz rad etildi chunki chek soxta!.")
+    await update_order(callback, "rejected", "🚫 Buyurtmangiz rad etildi chunki chek soxta📛!.")
 
 
 async def update_order(callback: types.CallbackQuery, status: str, message_text: str):
