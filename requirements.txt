@@ -1,0 +1,5 @@
+pyTelegramBotAPI
+aiogram
+aiosqlite
+aiogram>=3.3
+aiosqlite
