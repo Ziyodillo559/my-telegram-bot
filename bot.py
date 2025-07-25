@@ -99,12 +99,10 @@ def gifts_keyboard() -> InlineKeyboardMarkup:
 
 
 def admin_kb(order_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"approve_{order_id}"),
-            InlineKeyboardButton(text="🚫 Rad etish", callback_data=f"reject_{order_id}")
-        ]
-    ])
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"approve_{order_id}"),
+        InlineKeyboardButton(text="🚫 Rad etish", callback_data=f"reject_{order_id}")
+    ]])
 
 
 # 🔷 Handlers
@@ -149,7 +147,7 @@ async def select_stars_or_battle(callback: types.CallbackQuery):
         f"✅ {amount}⭐ tanladingiz.\n"
         f"💰 {price:,} so‘m\n\n"
         f"💳 Karta: <code>{CARD_NUMBER}</code>\n\n"
-        f"Chekni yuboring chek tekshiriladi va stars va giftlar yuboriladi!."
+        f"Chekni yuboring, tekshiriladi va buyurtma bajariladi."
     )
 
     async with aiosqlite.connect("orders.db") as db:
@@ -166,13 +164,13 @@ async def select_stars_or_battle(callback: types.CallbackQuery):
 async def select_gift(callback: types.CallbackQuery):
     _, amount, emoji = callback.data.split("_", 2)
     amount = int(amount)
-    price = int((amount/50)*13000)
+    price = int((amount / 50) * 13000)
 
     await callback.message.answer(
         f"✅ {amount}⭐ {emoji} tanladingiz.\n"
         f"💰 {price:,} so‘m\n\n"
         f"💳 Karta: <code>{CARD_NUMBER}</code>\n\n"
-        f"Chekni yuboring chek tekshiriladi va stars va giftlar yuboriladi!."
+        f"Chekni yuboring, tekshiriladi va buyurtma bajariladi."
     )
 
     async with aiosqlite.connect("orders.db") as db:
@@ -212,38 +210,48 @@ async def receive_receipt(message: types.Message, state: FSMContext):
         await message.answer("🔗 Battle linkini yuboring.")
     else:
         await state.set_state(OrderFSM.waiting_for_target_user)
-        await message.answer("stars qaysi user uchunligini yuboring @.")
+        await message.answer("Stars qaysi user uchunligini yuboring (@username).")
 
 
 @dp.message(OrderFSM.waiting_for_target_user)
 async def target_user(message: types.Message, state: FSMContext):
     await send_to_admin(message, state, "🎯 Target")
-    await message.answer("✅ Ma’lumotlar yuborildi iltimos sabr qling agar 6 soat ichida yuborilmasa @ikromjonovv_15 yozishinggiz mumkin.")
+    await message.answer("✅ Ma’lumotlar yuborildi. Iltimos, sabr qiling.")
     await state.clear()
 
 
 @dp.message(OrderFSM.waiting_for_battle_link)
 async def battle_link(message: types.Message, state: FSMContext):
     await send_to_admin(message, state, "🔗 Battle")
-    await message.answer("✅ Ma’lumotlar yuborildi iltimo sabr qiling.")
+    await message.answer("✅ Ma’lumotlar yuborildi. Iltimos, sabr qiling.")
     await state.clear()
 
 
+# 🔻 YANGILANGAN FUNKSIYA
 async def send_to_admin(message: types.Message, state: FSMContext, label: str):
     data = await state.get_data()
     order_id = data["order_id"]
 
     async with aiosqlite.connect("orders.db") as db:
         await db.execute("UPDATE orders SET target_user=? WHERE id=?", (message.text, order_id))
-        row = await db.execute("SELECT file_id, file_type FROM orders WHERE id=?", (order_id,))
-        file_id, file_type = await row.fetchone()
+        row = await db.execute("SELECT file_id, file_type, amount, sum, order_type FROM orders WHERE id=?", (order_id,))
+        file_id, file_type, amount, total_sum, order_type = await row.fetchone()
         await db.commit()
 
+    order_type_text = {
+        "stars": "⭐ Yulduz",
+        "gift": "🎁 Gift",
+        "battle": "🪖 Battle yulduz"
+    }.get(order_type, order_type)
+
     caption = (
-        f"📥 Yangi buyurtma\n"
-        f"ID: {order_id}\n"
-        f"👤 User: <code>{message.from_user.id}</code>\n"
-        f"{label}: {message.text}"
+        f"📥 <b>Yangi buyurtma</b>\n"
+        f"🆔 Buyurtma ID: <code>{order_id}</code>\n"
+        f"👤 User ID: <code>{message.from_user.id}</code>\n"
+        f"{label}: {message.text}\n"
+        f"🔢 Miqdor: {amount}⭐\n"
+        f"💰 Narxi: {total_sum:,} so‘m\n"
+        f"🛒 Tur: {order_type_text}"
     )
 
     if file_type == "photo":
@@ -254,12 +262,12 @@ async def send_to_admin(message: types.Message, state: FSMContext, label: str):
 
 @dp.callback_query(F.data.regexp(r"approve_\d+"))
 async def approve(callback: types.CallbackQuery):
-    await update_order(callback, "approved", "✅ Buyurtmangiz tasdiqlandi stars muvaffaqiyat yetkzildi tekshiring😊 .")
+    await update_order(callback, "approved", "✅ Buyurtmangiz tasdiqlandi. Stars yetkazildi.")
 
 
 @dp.callback_query(F.data.regexp(r"reject_\d+"))
 async def reject(callback: types.CallbackQuery):
-    await update_order(callback, "rejected", "🚫 Buyurtmangiz rad etildi chunki chek soxta📛!.")
+    await update_order(callback, "rejected", "🚫 Buyurtmangiz rad etildi. Chek noto‘g‘ri.")
 
 
 async def update_order(callback: types.CallbackQuery, status: str, message_text: str):
