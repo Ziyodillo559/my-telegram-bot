@@ -11,7 +11,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton, 
 from aiogram.client.default import DefaultBotProperties
 
 # 🔷 Config
-TOKEN = "8144692354:AAE2rVgqS88IPWdBQih12IqsE0qz7HCLY_I"
+TOKEN = "8144692354:AAEIpzUSzfvflNa8fqHD15Y5EmgQT_5h5YE"
 CARD_NUMBER = "9860 1606 2312 1748" 
 ADMIN_ID = 7664675013  # Admin Telegram ID
 
